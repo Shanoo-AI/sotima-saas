@@ -60,6 +60,10 @@ api_router = APIRouter(prefix="/api")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
 # ========================= MODELS =========================
 
 class UserRegister(BaseModel):
