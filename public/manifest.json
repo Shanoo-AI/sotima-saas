@@ -1,0 +1,25 @@
+{
+  "short_name": "Sotima Built",
+  "name": "Sotima Built Stationery SaaS",
+  "icons": [
+    {
+      "src": "logo.png",
+      "type": "image/png",
+      "sizes": "any"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0E1A16",
+  "background_color": "#ffffff"
+}
