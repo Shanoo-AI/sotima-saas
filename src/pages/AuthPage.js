@@ -24,6 +24,9 @@ const copy = {
     loginFailed: "Login failed",
     loginPlaceholder: "Enter your username",
     passPlaceholder: "Enter your password",
+    demoTitle: "For demo",
+    demoUsername: "username: demo",
+    demoPassword: "password: 123",
     hint: "New accounts are created by the admin.",
   },
   ur: {
@@ -39,6 +42,9 @@ const copy = {
     loginFailed: "لاگ ان ناکام ہوا",
     loginPlaceholder: "صارف نام درج کریں",
     passPlaceholder: "پاس ورڈ درج کریں",
+    demoTitle: "For demo",
+    demoUsername: "username: demo",
+    demoPassword: "password: 123",
     hint: "نیا اکاؤنٹ بنانے کے لئے ایڈمن سے رابطہ کریں۔",
   },
 };
@@ -186,6 +192,17 @@ export default function AuthPage() {
 
   useAuthCanvas(canvasRef);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      toast.info(t.demoTitle, {
+        description: `${t.demoUsername}\n${t.demoPassword}`,
+        duration: 9000,
+      });
+    }, 1100);
+
+    return () => clearTimeout(timer);
+  }, [t.demoPassword, t.demoTitle, t.demoUsername]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -243,6 +260,12 @@ export default function AuthPage() {
           </CardHeader>
 
           <CardContent>
+            <div className="demo-alert" role="note">
+              <span className="demo-alert-title">{t.demoTitle}</span>
+              <span>{t.demoUsername}</span>
+              <span>{t.demoPassword}</span>
+            </div>
+
             <form onSubmit={handleLogin} className="form-stack">
               {/* Username */}
               <div className="field">
