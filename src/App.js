@@ -2,6 +2,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "components/ui/sonner";
+import { ServerCog } from "lucide-react";
 import { AuthProvider, useAuth } from "contexts/AuthContext";
 import DashboardLayout from "components/DashboardLayout";
 import AuthPage from "pages/AuthPage";
@@ -14,14 +15,31 @@ import SettingsPage from "pages/SettingsPage";
 import AdminPage from "pages/AdminPage";
 import "App.css";
 
+function ServerAwakeningLoader() {
+  return (
+    <div className="server-awake-screen" role="status" aria-live="polite">
+      <div className="server-awake-card">
+        <div className="server-awake-orbit" aria-hidden="true">
+          <span />
+          <span />
+        </div>
+        <div className="server-awake-icon">
+          <ServerCog />
+        </div>
+        <p className="server-awake-kicker">Awakening server</p>
+        <h1 className="server-awake-title">Getting your workspace ready</h1>
+        <div className="server-awake-rail" aria-hidden="true">
+          <span />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin h-8 w-8 border-2 border-indigo-500 border-t-transparent rounded-full" />
-      </div>
-    );
+    return <ServerAwakeningLoader />;
   }
   if (!user) return <Navigate to="/auth" replace />;
   return children;
