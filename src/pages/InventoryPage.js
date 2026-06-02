@@ -1,7 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { Button } from "components/ui/button";
-import { Input } from "components/ui/input";
-import { Label } from "components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "components/ui/select";
@@ -9,11 +6,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Trash2, AlertTriangle, Package } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, AlertTriangle, Package, Printer } from "lucide-react";
 import JsBarcode from "jsbarcode";
 import api from "lib/api";
 
-function BarcodeDisplay({ value }) {
+function BarcodeDisplay({ value, className = "" }) {
   const svgRef = useRef(null);
   useEffect(() => {
     if (svgRef.current && value) {
@@ -24,7 +21,7 @@ function BarcodeDisplay({ value }) {
       } catch (_) {}
     }
   }, [value]);
-  return <svg ref={svgRef} style={{ maxWidth: 110 }} />;
+  return <svg ref={svgRef} className={className} style={{ maxWidth: 110 }} />;
 }
 
 export default function InventoryPage() {
@@ -33,7 +30,10 @@ export default function InventoryPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
+  const [printProduct, setPrintProduct] = useState(null);
+  const [printCount, setPrintCount] = useState("20");
   const [newCategory, setNewCategory] = useState("");
   const [form, setForm] = useState({
     name: "", category: "", cost_price: "", sale_price: "", quantity: "", low_stock_threshold: "10",
@@ -46,6 +46,15 @@ export default function InventoryPage() {
       .finally(() => setLoading(false));
   };
   useEffect(() => { fetchData(); }, []);
+
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      document.body.classList.remove("print-barcode-labels");
+    };
+
+    window.addEventListener("afterprint", handleAfterPrint);
+    return () => window.removeEventListener("afterprint", handleAfterPrint);
+  }, []);
 
   const resetForm = () => {
     setForm({ name: "", category: "", cost_price: "", sale_price: "", quantity: "", low_stock_threshold: "10" });
@@ -103,6 +112,20 @@ export default function InventoryPage() {
       quantity: String(product.quantity), low_stock_threshold: String(product.low_stock_threshold),
     });
     setDialogOpen(true);
+  };
+
+  const openPrintDialog = (product) => {
+    setPrintProduct(product);
+    setPrintCount("20");
+    setPrintDialogOpen(true);
+  };
+
+  const handlePrintBarcodes = () => {
+    const count = Math.max(1, parseInt(printCount, 10) || 1);
+    setPrintCount(String(count));
+    setPrintDialogOpen(false);
+    document.body.classList.add("print-barcode-labels");
+    window.setTimeout(() => window.print(), 80);
   };
 
   const filtered = products.filter(p =>
@@ -186,6 +209,42 @@ export default function InventoryPage() {
               </div>
             </DialogContent>
           </Dialog>
+          <Dialog open={printDialogOpen} onOpenChange={setPrintDialogOpen}>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, letterSpacing: "-0.02em" }}>
+                  Print Barcode Labels
+                </DialogTitle>
+              </DialogHeader>
+              <div style={{ display: "grid", gap: 14, marginTop: 8 }}>
+                <div className="form-field">
+                  <label className="form-label">Product</label>
+                  <input className="form-input" value={printProduct?.name || ""} disabled />
+                </div>
+                <div className="form-field">
+                  <label className="form-label">Number of Labels</label>
+                  <input
+                    className="form-input"
+                    type="number"
+                    min="1"
+                    value={printCount}
+                    onChange={e => setPrintCount(e.target.value)}
+                    data-testid="barcode-print-count"
+                  />
+                </div>
+                <button
+                  className="form-submit"
+                  style={{ width: "100%", justifyContent: "center" }}
+                  onClick={handlePrintBarcodes}
+                  disabled={!printProduct}
+                  data-testid="print-barcodes-btn"
+                >
+                  <Printer style={{ width: 15, height: 15 }} />
+                  Print Labels
+                </button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -238,6 +297,9 @@ export default function InventoryPage() {
                       <button className="icon-btn" onClick={() => openEdit(product)} data-testid={`edit-product-${product.id}`}>
                         <Pencil />
                       </button>
+                      <button className="icon-btn" onClick={() => openPrintDialog(product)} data-testid={`print-product-${product.id}`}>
+                        <Printer />
+                      </button>
                       <button className="icon-btn danger" onClick={() => handleDelete(product.id)} data-testid={`delete-product-${product.id}`}>
                         <Trash2 />
                       </button>
@@ -257,6 +319,21 @@ export default function InventoryPage() {
           </table>
         </div>
       </div>
+
+      {printProduct && (
+        <div id="barcode-print-sheet" className="print-barcode-sheet" data-testid="barcode-print-sheet">
+          {Array.from({ length: Math.max(1, parseInt(printCount, 10) || 1) }).map((_, index) => (
+            <div className="barcode-print-label" key={`${printProduct.id}-${index}`}>
+              <div className="barcode-print-name">{printProduct.name}</div>
+              <BarcodeDisplay value={printProduct.barcode} className="barcode-print-svg" />
+              <div className="barcode-print-meta">
+                <span>{printProduct.sku}</span>
+                <span>Rs. {Number(printProduct.sale_price).toFixed(2)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
