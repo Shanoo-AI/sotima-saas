@@ -45,10 +45,42 @@ export default function POSPage() {
     });
   };
 
+  const clearSearch = () => {
+    setSearchQuery("");
+    searchRef.current?.focus();
+  };
+
+  const addSearchResultToCart = () => {
+    const rawQuery = searchQuery.trim();
+    const query = rawQuery.toLowerCase();
+    if (!query) return;
+
+    const exactMatch = products.find(p =>
+      p.barcode === rawQuery ||
+      p.sku.toLowerCase() === query ||
+      p.name.toLowerCase() === query
+    );
+    const product = exactMatch || filtered[0];
+
+    if (!product) {
+      toast.error("No matching product found");
+      return;
+    }
+
+    addToCart(product);
+    clearSearch();
+  };
+
   const handleSearchInput = (value) => {
     setSearchQuery(value);
     const match = products.find(p => p.barcode === value);
-    if (match) { addToCart(match); setSearchQuery(""); }
+    if (match) { addToCart(match); clearSearch(); }
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    addSearchResultToCart();
   };
 
   const updateQuantity = (productId, delta) => {
@@ -104,7 +136,9 @@ export default function POSPage() {
             <Search />
             <input ref={searchRef} data-testid="pos-search"
               placeholder="Scan barcode or search productsÃ¢â‚¬Â¦"
-              value={searchQuery} onChange={e => handleSearchInput(e.target.value)} />
+              value={searchQuery}
+              onChange={e => handleSearchInput(e.target.value)}
+              onKeyDown={handleSearchKeyDown} />
           </div>
 
           <div className="pos-product-grid">
